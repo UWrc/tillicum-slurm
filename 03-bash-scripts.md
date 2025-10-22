@@ -120,7 +120,7 @@ echo "Job finished at: $(date)"
 Submit the job with:
 
 ```bash
-sbatch job.slurm
+sbatch loop_job.slurm
 ```
 
 Check job output:
