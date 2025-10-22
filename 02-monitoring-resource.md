@@ -1,12 +1,12 @@
-# Monitoring Resource Usage in Tillicum
+# Monitoring Resource Usage on Tillicum
 
-Efficient use of Tillicum’s GPUs and compute resources starts with understanding how to monitor your jobs and usage.
-Slurm provides several built-in tools for checking job status, performance, and resource efficiency.
-Tillicum also provides the `hyakusage` utility for monitoring costs and budgets.
+Efficient use of Tillicum’s GPUs and compute resources starts with understanding how to monitor your jobs and usage:
+- Slurm provides several built-in tools for checking job status, performance, and resource efficiency.
+- Tillicum also provides the `hyakusage` utility for monitoring costs and budgets.
 
 ## Checking Job Accounting with `sacct`
 
-`sacct` displays accounting data for all jobs and job steps in the Slurm job accounting log or Slurm database. It’s useful for reviewing job history, including elapsed time, resource requests, and job states. 
+`sacct` displays accounting data for all jobs and job steps in the Slurm database. It’s useful for reviewing job history, including elapsed time, resource requests, and job states. 
 
 See the [sacct manual](https://slurm.schedmd.com/sacct.html) for a full list of format options. The man pages can also be viewed on Tillicum by running `man <command>`. Exit the man command with `q`.
 
@@ -33,11 +33,11 @@ sacct -s pending -a -X -o user,jobid,elapsed,account,qos,node,reqtres%50
 sacct -j <job_id> -B
 ```
 
-## Inspecting Job Details with `scontrol`
+## Checking Job Details with `scontrol`
 
-`scontrol` is used to view or modify Slurm configuration including: job, job step, node, partition, reservation, and overall system configuration. *While most of the commands can only be executed by user root or an Administrator, users can still use it to inspect their own jobs.* See the [scontrol manual](https://slurm.schedmd.com/scontrol.html) for a full list of format options.
+`scontrol` is used to view or modify Slurm configuration including: job, job step, node, partition, time, reservation, and overall system configuration. *While most of the commands can only be executed by user root or an Administrator, users can still use it to inspect their own jobs.* See the [scontrol manual](https://slurm.schedmd.com/scontrol.html) for a full list of format options.
 
-**Check running job details (e.g., resouces requested, working directory, command, and I/O paths)**
+**Check details for a running job (e.g., resouces requested, working directory, command, and I/O paths)**
 
 ```bash
 scontrol show job <job_id>
@@ -46,18 +46,18 @@ scontrol show job <job_id>
 Example output snippet:
 
 ```bash
-JobId=18981 JobName=test
-   UserId=kcxie(123456) GroupId=all(226269)
-   Priority=1 Nice=0 Account=uwit QOS=normal
+JobId=19157 JobName=myjob
+   UserId=UWNetID(123456) GroupId=all(226269)
+   Priority=1 Nice=0 Account=trainslurm2025 QOS=normal
    JobState=RUNNING Reason=None Dependency=(null)
    ...
-   StartTime= EndTime= Deadline=N/A
+   StartTime=... EndTime=... Deadline=N/A
    ...
-   Command=...
-   WorkDir=...
-   StdErr=...
+   Command=/gpfs/scrubbed/kcxie/tillicum-slurm/job.slurm
+   WorkDir=/gpfs/scrubbed/kcxie/tillicum-slurm
+   StdErr=/gpfs/scrubbed/kcxie/tillicum-slurm/slurm-19157.out
    StdIn=...
-   StdOut=...
+   StdOut=/gpfs/scrubbed/kcxie/tillicum-slurm/slurm-19157.out
    ...
 ```
 
@@ -68,23 +68,23 @@ Tillicum includes the `seff` utility, which reports resource efficiency for comp
 Example usage:
 
 ```bash
-seff 18981
+seff 19157
 ```
 
 Example output:
 
 ```bash
-Job ID: 18981
+Job ID: 19157
 Cluster: tillicum
-User/Group: UWNetID/account
-State: COMPLETED (exit code 0)
-Nodes: 2
-Cores per node: 8
+User/Group: kcxie/all
+State: CANCELLED (exit code 0)
+Nodes: 1
+Cores per node: 16
 CPU Utilized: 00:00:00
-CPU Efficiency: 0.00% of 06:56:48 core-walltime
-Job Wall-clock time: 00:26:03
-Memory Utilized: 5.78 MB
-Memory Efficiency: 0.00% of 390.62 GB (195.31 GB/node)
+CPU Efficiency: 0.00% of 00:25:36 core-walltime
+Job Wall-clock time: 00:01:36
+Memory Utilized: 16.45 MB
+Memory Efficiency: 0.00% of 400.00 GB (400.00 GB/node)
 ```
 
 > 💡 **TIP:** Requesting more memory or GPUs than your job actually needs can lead to longer queue times, reduced cluster efficiency, and higher job costs.
@@ -97,7 +97,7 @@ Tillicum provides a convenient utility called `hyakusage`, which summarizes reso
 
 ### Default
 
-Running `hyakusage` with no arguments prints a usage report for the **current month** for the **current user**, grouped by **account** and **QOS**.
+Running `hyakusage` with no arguments prints a usage report for the **current billing cycle** for the **current user**, grouped by **account** and **QOS**.
 
 ```bash
 hyakusage
@@ -105,7 +105,7 @@ hyakusage
 
 **Key features:**
 - Displays usage for all accounts you have access to.
-- Shows total GPU-hours and costs per account at the bottom.
+- Shows total GPU-hours and costs per account at the bottom of each account.
 - Integrates account-level budgets (if set) to show progress toward limits.
 
 Example output:
@@ -116,21 +116,35 @@ Example output:
       billable GPU hours = raw GPU hours x QOS multiplier.
   * Costs are rounded down to nearest cent.
 
-Usage Report for Account uwit (2025-10-01 to 2025-10-20)
+Usage Report for Account trainslurm2025 (2025-10-01 to 2025-10-21)
 ╭────────────────────────┬────────────────────────┬────────────────────────╮
 │ USER                   │ GPU Hours (hrs)        │ Jobs                   │
 ├────────────────────────┼────────────────────────┼────────────────────────┤
-│ kcxie                  │         0.88           │      4                 │
 ╰────────────────────────┴────────────────────────┴────────────────────────╯
 ╭────────────────────────┬────────────────────────┬────────────────────────╮
 │ QOS       (multiplier) │ GPU Hours (hrs)        │ Cost (USD)             │
 ├────────────────────────┼────────────────────────┼────────────────────────┤
-│ normal         (x 1.0) │         0.88           │        $0.79           │
 ├────────────────────────┼────────────────────────┼────────────────────────┤
-│ total (selected users) │         0.88           │        $0.79           │
+│ total (selected users) │         0.00           │        $0.00           │
 ╰────────────────────────┴────────────────────────┴────────────────────────╯
-CURRENT MONTH total (all users, all qos): 0.90 GPU hours, $0.81
-MONTHLY BUDGET:      $0.81 /   $1000.00  [░░░░░░░░░░] 0%
+CURRENT MONTH total (all users, all qos): 0.00 GPU hours, $0.00
+
+Usage Report for Account uwit (2025-10-01 to 2025-10-21)
+╭────────────────────────┬────────────────────────┬────────────────────────╮
+│ USER                   │ GPU Hours (hrs)        │ Jobs                   │
+├────────────────────────┼────────────────────────┼────────────────────────┤
+│ kcxie                  │         1.26           │     12                 │
+╰────────────────────────┴────────────────────────┴────────────────────────╯
+╭────────────────────────┬────────────────────────┬────────────────────────╮
+│ QOS       (multiplier) │ GPU Hours (hrs)        │ Cost (USD)             │
+├────────────────────────┼────────────────────────┼────────────────────────┤
+│ interactive    (x 1.0) │         0.16           │        $0.14           │
+│ normal         (x 1.0) │         1.10           │        $0.99           │
+├────────────────────────┼────────────────────────┼────────────────────────┤
+│ total (selected users) │         1.26           │        $1.13           │
+╰────────────────────────┴────────────────────────┴────────────────────────╯
+CURRENT MONTH total (all users, all qos): 1.34 GPU hours, $1.21
+MONTHLY BUDGET:      $1.21 /   $1000.00  [░░░░░░░░░░] 0%
 ```
 
 ## Options
@@ -159,9 +173,9 @@ Notes:
 Example:
 
 ```bash
-# To audit what all users' resource usage from your group
-hyakusage -u all -a <account>
+# To audit all users' resource usage from your group
+hyakusage -u all
 
 # To view resource usage for a given time period
-hyakusage -s 2025-10-15 -e 2025-10-20
+hyakusage -s 2025-10-19 -e 2025-10-21
 ```

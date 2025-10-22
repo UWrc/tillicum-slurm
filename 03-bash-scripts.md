@@ -4,16 +4,16 @@ Bash scripts allow you to automate, reproduce, and document how your jobs run on
 
 Instead of typing every command interactively, you can write your job instructions once and submit them as a batch script. Slurm will then execute the script for you on a compute node when resources become available.
 
-In this session, you will learn how to use Bash scripts to organize your workflows, set variables, load environments, and run commands automatically with Slurm.
+In this section, you will learn how to use Bash scripts to organize your workflows, set variables, load environments, and run commands automatically with Slurm.
 
-## What Is a Bash Script?
+## Bash Script
 
 A Bash script is simply a text file containing a sequence of commands that you could otherwise type directly into your terminal.
 When you submit a script with `sbatch`, Slurm executes it line by line on the compute node.
 
 **A simple script as a command proxy**
 
-Run the following command to view the contents of the example script:
+View the contents of the example script:
 
 ```bash
 cat loop_script.sh
@@ -109,13 +109,40 @@ echo "Job finished at: $(date)"
 ```
 
 **Explanation**
-- #!/bin/bash: “Shebang” line — tells the system to use Bash to interpret this file.
+- #!/bin/bash: Tells the system to use Bash to interpret this file.
 - #SBATCH lines: Slurm directives that define resources and job options.
-- `module load`: Load required software modules or environments.
+- Environment setup: Such as `module load conda`, `conda activate myenv`, `export PATH`
 - Workflow commands: The actual computation or analysis.
 - `echo` commands: Print logs and timestamps to track job progress.
 
 > 💡 **TIP:** All #SBATCH directives must appear before the first executable command in the script.
+
+Submit the job with:
+
+```bash
+sbatch job.slurm
+```
+
+Check job output:
+
+```bash
+cat logs/slurm-<job_id>.out
+```
+
+Example output:
+
+```bash
+Running on host: g001
+Job started at: Mon Oct 20 10:08:46 PDT 2025
+Sequence complete! Iterations from 0 to 1000000.
+
+real    0m2.762s
+user    0m2.756s
+sys     0m0.000s
+Job finished at: Mon Oct 20 10:08:49 PDT 2025
+```
+
+> 💡 **TIP:** Use `less` or `tail -f` for large files or to monitor output in real time.
 
 ## Setting and Using Variables
 
@@ -148,22 +175,25 @@ echo "Job completed successfully!"
 
 ## Loading Modules and Setting Environment
 
-Most HPC software relies on modules and environment variables to configure runtime environments.  See [Software Environment](https://hyak.uw.edu/docs/tillicum/environment) for more details on how modules are managed on Tillicum.
+**Loading modules**
+
+Most HPC software relies on modules and environment variables to configure runtime environments.  See [Software Environment on Tillicum](https://hyak.uw.edu/docs/tillicum/environment) for more details on how modules are managed on Tillicum.
 
 You can safely load them inside your job script before running commands.
 
 Example:
 
 ```bash
-# Load necessary modules
+# Unload ALL modules from the current session
 module purge
-module load gcc/13.4.0 cuda/12.9.1 openmpi/5.0.8
+# Load necessary modules
+module load conda
 
 # Print environment info
 echo "Python path: $(which python)"
 ```
 
-This ensures a clean environment and prevents conflicts with previously loaded modules.
+> 💡 **TIP:** Calling `module purge` at the beginning ensures a clean environment and prevents conflicts with previously loaded modules.
 
 **Setting custom environment variables**
 
@@ -178,9 +208,9 @@ These variables are inherited by all processes started during the job.
 
 ## Output and Error Files
 
-By default, both standard output and standard error are directed to a file named `slurm-%j.out`, where the `%j` is replaced with your job ID. For job arrays, the default file name is "slurm-%A_%a.out", where "%A" is replaced by the job ID and "%a" with the array index. 
+By default, both standard output and standard error are directed to a file named `slurm-%j.out`, where the `%j` is replaced with your job ID. For job arrays, the default file name is `slurm-%A_%a.out`, where "%A" is replaced by the job ID and "%a" with the array index. 
 
-To explicitly specify standard output and error files:
+Explicitly specify `--output` and `--error` flags to save standard output and error files separately:
 
 ```bash
 #SBATCH --output=logs/slurm_%j.out
@@ -195,18 +225,10 @@ To control whether Slurm appends or overwrites existing files:
 #SBATCH --open-mode={append|truncate}
 ```
 
-Within your job script, you can also redirect the output of individual commands using standard shell redirection `>`:
+Within your job script, you can also redirect the output of individual commands using standard shell redirection `>` (or `>>` for appending):
 
 ```bash
 time ./$SCRIPT 0 1000000 > output.txt
 ```
 
 This writes all standard output from the command to `output.txt`.
-
-Check job output:
-
-```bash
-cat logs/slurm-<job_id>.out
-```
-
-> 💡 **TIP:** Use `less` or `tail -f` for large files or to monitor output in real time.

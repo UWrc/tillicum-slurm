@@ -4,14 +4,14 @@ Running multiple independent tasks in parallel is a core strength of HPC systems
 
 In this section, we’ll work through a complete example using Slurm job arrays. Harnessing the power of parallel computing allows you to efficiently launch and manage many similar jobs - such as processing multiple input files, training several models, or running parameter scans - in a single submission. The script presented can be used as a template and adapted for your purposes.
 
-## What Is an Array Job?
+## Array Job
 
 An array job is a convenient way to run the same command multiple times with different parameters or inputs.
 This is common when testing different configurations in simulations, running analyses across datasets, or performing parameter sweeps in ML training.
 
-Let's run an array job with loop_array.slurm in your working directory.
+Let's run an array job with `loop_array.slurm` in your working directory.
 
-## Example: `loop_array.slurm`
+## Example Slurm Script for Array Job
 
 Open the example script `loop_array.slurm`:
 
@@ -76,7 +76,7 @@ The table below shows the variables `SLURM_ARRAY_TASK_ID`, `START`, and `END` fo
 
 Thus, each job in `loop_array.slurm` executes `loop_script.sh` on a different, non-overlapping range of numbers. 
 
-> 💡 **TIP:** $SLURM_ARRAY_TASK_ID can also be used to select different input files or parameters, and to perform parameter sweeps. Always confirm your array indices (0-based vs 1-based) match your input list size.
+> 💡 **TIP:** `$SLURM_ARRAY_TASK_ID` can also be used to select different input files or parameters, and to perform parameter sweeps. Always confirm your array indices (0-based vs 1-based) match your input list size.
 
 ## Submitting and Monitoring the Array Job
 
@@ -111,11 +111,14 @@ loop_array_123456789_9.out
 Each file contains the output for one array task. For example:
 
 ```bash
-Sequence complete! Iterations from 0 to 4,999,999.
+Starting task 0 on g004
+Job array ID: 19158
+Sequence complete! Iterations from 0 to 4999999.
 
-real    0m5.617s
-user    0m5.570s
-sys     0m0.016s
+real    0m14.119s
+user    0m14.083s
+sys     0m0.001s
+Task 0 completed at Mon Oct 20 10:26:43 PDT 2025
 ```
 
 ## Controlling Parallelism

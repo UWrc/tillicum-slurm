@@ -70,11 +70,11 @@ The following arguments are commonly used and recommended for any job submission
 | Account | `-A`, `--account` | Specifies which project or lab account to charge. Default: your available account. |
 | QOS | `-q`, `--qos` | Quality of service (QOS). Default: normal.|
 | Nodes | `-N`, `--nodes` | Number of compute nodes to request. Most jobs use 1. Multi-node jobs are possible if supported by your code. |
-| GPUs | `-G`, `--gpus` | Number of GPUs to request. Note that not all codes can make use of multiple GPUs; scaling is not always linear with more GPUs. **Minimum: -G 1** |
-| Memory | `--mem` | Memory per node (e.g., 200G). This is in the format `size[units]`. Units may be `M`, `G`, or `T` for megabyte, gigabyte, and terabyte. Default: Megabyte. |
+| GPUs | `-G`, `--gpus` | Number of GPUs to request (**min: -G 1**). Note that not all codes can make use of multiple GPUs; scaling is not always linear with more GPUs. |
+| Memory | `--mem` | Memory per node (**max: --mem=200G per GPU**). This is in the format `size[units]`. Units may be `M`, `G`, or `T` for megabyte, gigabyte, and terabyte. Default: Megabyte. |
 | Time | `-t`, `--time` | Maximum runtime. Formats include `HH:MM:SS`, `D-HH`, and `minutes`. |
 
-For more options, see the [salloc](https://slurm.schedmd.com/salloc.html) and [sbatch](https://slurm.schedmd.com/sbatch.html) documentation.
+For more options, see the [salloc](https://slurm.schedmd.com/salloc.html) and [sbatch](https://slurm.schedmd.com/sbatch.html) manual.
 
 ## Interactive Jobs with `salloc`
 
@@ -86,7 +86,7 @@ Start an interactive session using 1 GPU for 1 hour in interactive queue:
 salloc --qos=interactive --gpus=1 --time=01:00:00
 ```
 
-The job will pend in the queue. When the job starts, you’ll see messages similar to:
+The job will wait in the queue. When the job starts, you’ll see messages similar to:
 
 ```bash
 salloc: job 18973 has been allocated resources
@@ -95,7 +95,7 @@ salloc: Waiting for resource configuration
 salloc: Nodes g001 are ready for job
 ```
 
-**Tip**: Keep track of your jobID (e.g., 18973) — it helps us troubleshoot issues if your job fails. 
+> 💡 **TIP:** Keep track of your jobID (e.g., 18973) — it helps us troubleshoot issues if your job fails. 
 
 Once resources are allocated, confirm you're on a compute node:
 
@@ -103,7 +103,7 @@ Once resources are allocated, confirm you're on a compute node:
 hostname
 ```
 
-**Notice**: The hostname changed from `tillicum-login0*` to `g001` or another Tillicum compute node (`g001`-`g024`). You are now on a compute node. 
+The hostname changed from `tillicum-login0*` to `g001` or another Tillicum compute node (`g001`-`g024`). You are now on a compute node. 
 
 Check GPU availability:
 
@@ -123,7 +123,13 @@ exit
 
 Batch jobs run automatically without supervision. Resource requirements and commands are defined in a **Slurm job script**. 
 
-Example job script that can be used to schedule a job on Tillicum:
+View the example job script that can be used to schedule a job on Tillicum:
+
+```bash
+cat job.slurm
+```
+
+Output:
 
 ```bash
 #!/bin/bash
@@ -133,11 +139,12 @@ Example job script that can be used to schedule a job on Tillicum:
 #SBATCH --gpus=2
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=400G
-#SBATCH --time=04:00:00
+#SBATCH --time=01:00:00
 #SBATCH --output=slurm-%j.out
 
 hostname
 nvidia-smi
+sleep 1200
 ```
 
 Submit the job with:
@@ -151,7 +158,7 @@ Slurm will assign a job ID and queue it for execution. When resources become ava
 To cancel a pending or running job, run:
 
 ```bash
-# Below replace <job_id> with the real jobID returned by Slurm.
+# Replace <job_id> with the real jobID returned by Slurm.
 scancel <job_id>
 ```
 
@@ -169,17 +176,9 @@ Watch your queue refreshed every 10 seconds:
 watch -n 10 squeue -u $USER
 ```
 
-Use `sinfo -r` to check cluster-wide node availability:
+`watch` command can be terminated with a keyboard interrupt `Ctrl+C`.
 
-```bash
-$ sinfo -r
-PARTITION AVAIL  TIMELIMIT  NODES  STATE NODELIST
-gpu-h200*    up   infinite      2   down g[023-024]
-gpu-h200*    up   infinite      3    mix g[001,005-006]
-gpu-h200*    up   infinite     19   idle g[002-004,007-022]
-```
-
-`squeue -u $USER` lists all your active or queued jobs. To understand `squeue` output:
+`squeue -u $USER` lists all your running or queued jobs. To understand `squeue` output:
 
 | Column | Description |
 | :- | :- |
@@ -190,4 +189,15 @@ gpu-h200*    up   infinite     19   idle g[002-004,007-022]
 | **TIME** | Runtime duration. |
 | **NODELIST(REASON)** | Node(s) assigned to the job or reason for pending (e.g., “Resources” or “Priority”) |
 
-For more details or to customize the output format of `squeue`, refer to [squeue documentation](https://slurm.schedmd.com/squeue.html).
+For more details or to customize the output format of `squeue`, refer to [squeue manual](https://slurm.schedmd.com/squeue.html).
+
+
+Use `sinfo -r` to check cluster-wide node availability:
+
+```bash
+$ sinfo -r
+PARTITION AVAIL  TIMELIMIT  NODES  STATE NODELIST
+gpu-h200*    up   infinite      2   down g[023-024]
+gpu-h200*    up   infinite      3    mix g[001,005-006]
+gpu-h200*    up   infinite     19   idle g[002-004,007-022]
+```

@@ -24,7 +24,7 @@ We recommend starting your working directory in a filesystem location where you 
 
 For this tutorial, we will use Tillicum's free community storage under `/gpfs/scrubbed` for the working directory.
 
-**1. Navigate to `/gscratch/scrubbed`**
+**1. Navigate to `/gpfs/scrubbed`**
 
 ```bash
 cd /gpfs/scrubbed/
@@ -53,4 +53,10 @@ Navigate into it to get started:
 
 ```bash
 cd tillicum-slurm
+```
+
+List the contents in the directory:
+
+```bash
+ls
 ```
