@@ -6,7 +6,7 @@ High-performance computing (HPC) clusters like **Tillicum** use a **job schedule
 
 **Slurm** (Simple Linux Utility for Resource Management): the job scheduler used across Hyak clusters, including Tillicum. It handles job submission, resource allocation, and queueing, enabling thousands of users to share the cluster efficiently. For detailed reference, visit the [Slurm documentation](https://slurm.schedmd.com/documentation.html).
 
-Tillicum is a **GPU-only** cluster designed for compute- and AI-intensive workloads. All jobs must request at least one GPU using the `--gpus` option in Slurm.
+Tillicum is a **GPU-only** cluster designed for compute- and AI-intensive workloads. All jobs must request at least one GPU with Slurm.
 
 🎯 **By completing this tutorial, you’ll learn how to:**
 - Submit and run interactive and batch jobs with Slurm
@@ -40,6 +40,6 @@ We’d love your feedback to help improve this tutorial and future Tillicum trai
 
 - [Tillicum Documentation](https://hyak.uw.edu/docs/tillicum/)
 - [Slurm Documentation](https://slurm.schedmd.com/documentation.html)
-- Previous Hyak Slurm:
+- Previous Hyak Slurm tutorials:
   - [Basic Slurm](https://hyak.uw.edu/docs/hyak101/basics/syllabus_slurm)
   - [Advanced Slurm](https://hyak.uw.edu/docs/hyak101/basics/syllabus_advanced)
