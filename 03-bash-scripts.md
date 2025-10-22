@@ -177,7 +177,7 @@ echo "Job completed successfully!"
 
 **Loading modules**
 
-Most HPC software relies on modules and environment variables to configure runtime environments.  See [Software Environment on Tillicum](https://hyak.uw.edu/docs/tillicum/environment) for more details on how modules are managed on Tillicum.
+Most HPC software relies on modules and environment variables to configure runtime environments. See [Software Environment on Tillicum](https://hyak.uw.edu/docs/tillicum/environment) for more details on how modules are managed on Tillicum.
 
 You can safely load them inside your job script before running commands.
 
