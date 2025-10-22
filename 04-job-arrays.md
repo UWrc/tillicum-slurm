@@ -1,41 +1,68 @@
-# Jab Arrays
+# Parallel Computing with Array Jobs
 
-In this section, we will present a worked example using Slurm job arrays. This example will display how Slurm can be used for parallel computing or executing multiple jobs in parallel. Harnessing the power of parallel computing can decrease your total time preparing and submitting jobs by allowing you to execute a set of jobs in parallel. The script presented can be used as a template and adapted for your purposes.
+Running multiple independent tasks in parallel is a core strength of HPC systems like Tillicum. Slurm provides built-in mechanisms for parallel execution, from **job arrays** for parameter sweeps to **distributed jobs** using MPI.
 
-Imagine you have a giant pile of letters that need to be put into envelopes. Each letter is already written, and each envelope is ready to be sealed. To speed things up, you gather a group of friends, and each person gets their own stack of letters and envelopes. Everyone can work independently, putting letters into envelopes without needing to talk to each other or wait for someone else to finish.
+In this section, we’ll work through a complete example using Slurm job arrays. Harnessing the power of parallel computing allows you to efficiently launch and manage many similar jobs - such as processing multiple input files, training several models, or running parameter scans - in a single submission. The script presented can be used as a template and adapted for your purposes.
 
-In HPC, an "embarrassingly parallel" problem is like this task. It's a big job that can be broken down into many small, separate tasks that don’t need to interact with each other. Each small task can be handled by a different computer (or processor), all working at the same time. This makes it really easy to speed up the cumulative task by just adding more computers to work on it in parallel.
+## What Is an Array Job?
 
-## Array Jobs
+An array job is a convenient way to run the same command multiple times with different parameters or inputs.
+This is common when testing different configurations in simulations, running analyses across datasets, or performing parameter sweeps in ML training.
 
-It can be useful to run an array job when you want to run a command multiple times with different parameters or execute the same command on multiple files. This is a common technique for testing different configurations in a simulation. Array jobs are also useful in situations where you want to run the same analysis on different datasets. Let's run an array job with loop_array.slurm located in the base directory.
+Let's run an array job with loop_array.slurm in your working directory.
+
+## Example: `loop_array.slurm`
+
+Open the example script `loop_array.slurm`:
 
 ```bash
 nano loop_array.slurm
 ```
 
-This should look similar to `loop_job.slurm` but with the extra argument `#SBATCH --array=0-9`. This argument indicates that 10 jobs will be requested with this single script. The flag `#SBATCH -o log/%x_%A_%a.out`, again, will save the output file to the log directory. The directory will created if it does not exist already. The job name will replace `%x`, the job ID will replace `%A`, and Slurm Array Task ID (i.e., the individual job requested with the array job) will replace `%a` in the output file name. `%a` will be an integer 0-9 as specified with `#SBATCH --array=0-9`.
-
-The main difference between `loop_array.slurm` and `loop_job.slurm` that we saw in the last section, is that here we are using bash scripting and variable syntax to set up the interval for `loop_script.sh` to count. Remember that `loop_script.sh` requires two arguments, a starting and ending integer and then simply counts from the start integer until the ending integer is met. With `loop_array.slurm` we are doing the same, except that our main command is changed so that the two arguments are now two variables `START` and `END`:
-
 ```bash
-time ./loop_script.sh ${START} ${END}
-```
+#!/bin/bash
 
-Before executing the command, we define the variables `START`, `END`, and a third variable `COUNT`:
+#SBATCH --job-name=loop_array
+#SBATCH --qos=normal
+#SBATCH --gpus=1
+#SBATCH --mem=10G
+#SBATCH --time=00:05:00
+#SBATCH --array=0-9
+#SBATCH --output=logs/%x_%A_%a.out
 
-```bash
+# Each array task runs the same code with different ranges of numbers.
+# COUNT sets the number of iterations per task.
+# 5000000 iterations takes about 30 seconds to complete.
 COUNT=5000000
-START=$((${SLURM_ARRAY_TASK_ID}*${COUNT}))
-END=$((${START}+${COUNT}-1))
+
+# Use the array index SLURM_ARRAY_TASK_ID to set up the starting and ending point for each task.
+START=$((${SLURM_ARRAY_TASK_ID} * ${COUNT}))
+END=$((${START} + ${COUNT} - 1))
+
+# Command
+echo "Starting task $SLURM_ARRAY_TASK_ID on $(hostname)"
+echo "Job array ID: $SLURM_ARRAY_JOB_ID"
+time ./loop_script.sh ${START} ${END}
+echo "Task $SLURM_ARRAY_TASK_ID completed at $(date)"
 ```
 
-In this case, `COUNT` is a constant used to help set up the number range that will be counted by the loop script. The `START` variable is prepared by multiplying a Slurm environment variable `SLURM_ARRAY_TASK_ID` by `COUNT`, and the `END` variable is defined as the `START` variable plus `COUNT` minus 1.
+**Explanation:**
+- `#SBATCH --array=0-9`: Creates an array of 10 tasks (IDs 0 through 9). Each runs the same script with different input values determined by the variables independently.
+- `#SBATCH --output=logs/%x_%A_%a.out`: Saves output to the `logs` directory. `%x`, `%A`, and `%a` expand to the job name, job ID, and Slurm Array Task ID. <br> The directory will created if it does not exist already. 
+- `COUNT`, `START` and `END`: Defines variable syntax to set up the number of iterations and the range for each job.
+- `SLURM_ARRAY_TASK_ID`: Slurm environment variable that uniquely identifies each array task (0-9 here).
+- `time ./loop_script.sh ${START} ${END}`: Runs the counting script `loop_script.sh`. The two arguments accepted (starting and ending value to count) are now two variables `START` and `END`.
 
-Each job in the array will have a different `SLURM_ARRAY_TASK_ID` set by `#SBATCH --array=0-9`. For the first job, `SLURM_ARRAY_TASK_ID` equals 0 and `COUNT` equals 5,000,000 so `START` equals 0 (i.e., 0 * 5000000). `END` for the first job is 4,999,999 or (0 + 5000000 - 1). For the second job, `SLURM_ARRAY_TASK_ID` equals 1 so `START` equals 5000000 and `END` equals 9,999,999. And so on. Thus, each job in `loop_array.slurm` executes `loop_script.sh` on a different, non-overlapping range of numbers. The table below shows the variables `SLURM_ARRAY_TASK_ID`, `START`, and `END` for each job in the array.
+**How the variables work**
+
+Each job in the array will have a different `SLURM_ARRAY_TASK_ID` set by `#SBATCH --array=0-9`.
+Using this value, the script calculates distinct numeric ranges so each job processes a separate portion of the total task.
+For the first job, `SLURM_ARRAY_TASK_ID` equals 0 and `COUNT` equals 5,000,000 so `START` equals 0 (i.e., 0 * 5000000). `END` for the first job equals 4,999,999 or (0 + 5000000 - 1).
+For the second job, `SLURM_ARRAY_TASK_ID` equals 1 so `START` equals 5,000,000 and `END` equals 9,999,999. And so on. 
+The table below shows the variables `SLURM_ARRAY_TASK_ID`, `START`, and `END` for each job in the array.
 
 | SLURM_ARRAY_TASK_ID | START | END |
-| :- | :-: | -: |
+| :- | -: | -: |
 | 0 | 0 | 4,999,999 |
 | 1 |  5,000,000 |  9,999,999 |
 | 2 | 10,000,000 | 14,999,999 |
@@ -47,31 +74,41 @@ Each job in the array will have a different `SLURM_ARRAY_TASK_ID` set by `#SBATC
 | 8 | 40,000,000 | 44,999,999 |
 | 9 | 45,000,000 | 49,999,999 |
 
-If necessary, exit the text reader with `Ctrl+x` and submit the script using `sbatch`:
+Thus, each job in `loop_array.slurm` executes `loop_script.sh` on a different, non-overlapping range of numbers. 
+
+> 💡 **TIP:** $SLURM_ARRAY_TASK_ID can also be used to select different input files or parameters, and to perform parameter sweeps. Always confirm your array indices (0-based vs 1-based) match your input list size.
+
+## Submitting and Monitoring the Array Job
+
+Exit the text editor with `Ctrl+X` and submit your array job:
 
 ```bash
 sbatch loop_array.slurm
 ```
 
-Notice the jobs as they appear in your terminal showing `squeue`. [<ins>**Click here to return to the Pro Tip box with instructions to Monitor the Slurm Job Queue to set that view up again.**</ins>](https://hyak.uw.edu/docs/hyak101/basics/jobs#monitoring-the-slurm-job-queue)
-
-Once the jobs have completed, check the output files in the log directory:
+Monitor progress:
 
 ```bash
-cd log
+watch -n 10 squeue -u $USER
+```
+
+Once complete, you'll have 10 output files in `logs` directory. Check the output files:
+
+```bash
+cd logs
 ls
 ```
 
-Your list of output files from `loop_array.slurm` should look like the following but with 123456789 replaced by the JobID assigned to your array job when it was submitted.
+You should see 10 output files similar to (but with 123456789 replaced by the JobID assigned to your array job when it was submitted):
 
 ```bash
 loop_array_123456789_0.out  loop_array_123456789_1.out  loop_array_123456789_2.out
 loop_array_123456789_3.out  loop_array_123456789_4.out  loop_array_123456789_5.out
 loop_array_123456789_6.out  loop_array_123456789_7.out  loop_array_123456789_8.out
-loop_array_123456789_9.out  loop_array_123456789_10.out
+loop_array_123456789_9.out
 ```
 
-Each output file will contain information about the interval that was counted. For example,
+Each file contains the output for one array task. For example:
 
 ```bash
 Sequence complete! Iterations from 0 to 4,999,999.
@@ -81,14 +118,25 @@ user    0m5.570s
 sys     0m0.016s
 ```
 
-This exercise demonstrates:
+## Controlling Parallelism
 
-* The submission of an array job.
-* The usage of Bash variables to set up arguments for commands.
-* The usage of Slurm environment variable `SLURM_ARRAY_TASK_ID` as a identifier for each job in the array and a multiplier for defining variables.
+If you have a large array, you may not want all tasks running at once. You can use the % separator to cap how many array task run concurrently:
 
-Utilizing Slurm environment variables like `SLURM_ARRAY_TASK_ID` and Bash can help you generate job arrays for testing configurations and parameters for your research computing project. [<ins>**See Slurm documentation to explore more Slurm output environment variables.**</ins>](https://slurm.schedmd.com/sbatch.html#SECTION_OUTPUT-ENVIRONMENT-VARIABLES)
+```bash
+#SBATCH --array=0-9%5
+```
 
-In the Advanced Slurm tutorial, we explore the usage of `SLURM_ARRAY_TASK_ID` to execute the same command on a file set, and we use Bash scripting to perform a parameter sweep.
+This runs 10 tasks total but limits to 5 simultaneous jobs. As each task finishes, a new one starts automatically.
 
-We hope you will be able to adapt these methods to fit your needs and the needs of your research project. If you have any questions or suggestions for how to improve this tutorial, please email **\<help@uw.edu\>** with "Hyak Slurm Tutorial" in the subject line, and let us know what you think. Thank you!
+## Summary
+
+This exercise demonstrates how to:
+
+* Submit and manage array jobs in Slurm.
+* Use Bash variables to define dynamic arguments for commands.
+* Use Slurm environment variable `SLURM_ARRAY_TASK_ID` to uniquely identify and configure each task.
+
+Leveraging these techniques helps automate large-scale testing, parameter sweeps, and dataset processing for research computing projects. To learn more about Slurm’s environment variables, see the [**Slurm output environment variables documentation**](https://slurm.schedmd.com/sbatch.html#SECTION_OUTPUT-ENVIRONMENT-VARIABLES).
+
+> 💬 **Feedback Welcome:**
+> We hope this tutorial helps you design more efficient and scalable workflows on Tillicum. If you have any questions or suggestions for how to improve this tutorial, please email **\<help@uw.edu\>** with "Tillicum Slurm Tutorial" in the subject line, and let us know what you think. Thank you!

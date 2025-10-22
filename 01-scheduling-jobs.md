@@ -127,6 +127,7 @@ Example job script that can be used to schedule a job on Tillicum:
 
 ```bash
 #!/bin/bash
+
 #SBATCH --job-name=myjob
 #SBATCH --qos=normal
 #SBATCH --gpus=2

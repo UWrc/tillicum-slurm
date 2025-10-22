@@ -13,12 +13,13 @@ When you submit a script with `sbatch`, Slurm executes it line by line on the co
 
 **A simple script as a command proxy**
 
-Run:
+Run the following command to view the contents of the example script:
+
 ```bash
 cat loop_script.sh
 ```
 
-and it prints:
+Ouput:
 
 ```bash
 #!/bin/bash
@@ -38,7 +39,13 @@ for ((i=start; i<=end; i++)); do
 done
 ```
 
-`loop_script.sh` will take two arguments - a starting point and an ending point - and prints a message once it completes the loop. To run it interactively, use `./` with the desired starting and ending values:
+**Explanation:**
+- `start=$1` and `end=$2`: Accept two command-line arguments - a starting point and an ending point.
+- `if` condition: Checks whether both arguments are provided; if not, prints usage instructions and exits.
+- `for` loop: Iterates from the start to the end value.
+- `echo`: Prints a message once the loop completes.
+
+To run it interactively, use `./` with the desired starting and ending values:
 
 ```bash
 ./loop_script.sh 0 1000000
@@ -79,11 +86,12 @@ A Bash script used for job submission usually includes three sections:
 # Commands or workflow steps
 ```
 
-Let's look at a minimal working example:
+Let's look at a minimal working example `loop_job.slurm`:
 
 ```bash
 #!/bin/bash
-#SBATCH --job-name=demo
+
+#SBATCH --job-name=loop_job
 #SBATCH --qos=normal
 #SBATCH --gpus=1
 #SBATCH --mem=100G
@@ -101,11 +109,11 @@ echo "Job finished at: $(date)"
 ```
 
 **Explanation**
-- #!/bin/bash: “Shebang” line — tells the system to use Bash to interpret this file
-- #SBATCH lines: Slurm directives that define resources and job options
-- `module load`: Loads required software modules or environments
-- Workflow commands: The actual computation or analysis
-- `echo` commands: Print logs and timestamps to track job progress
+- #!/bin/bash: “Shebang” line — tells the system to use Bash to interpret this file.
+- #SBATCH lines: Slurm directives that define resources and job options.
+- `module load`: Load required software modules or environments.
+- Workflow commands: The actual computation or analysis.
+- `echo` commands: Print logs and timestamps to track job progress.
 
 > 💡 **TIP:** All #SBATCH directives must appear before the first executable command in the script.
 
@@ -113,11 +121,12 @@ echo "Job finished at: $(date)"
 
 Variables make your scripts more flexible, readable, and reusable.
 
-Example:
+Example `loop_var.slurm`:
 
 ```bash
 #!/bin/bash
-#SBATCH --job-name=var_demo
+
+#SBATCH --job-name=loop_var
 #SBATCH --qos=normal
 #SBATCH --gpus=1
 #SBATCH --mem=100G
@@ -136,11 +145,6 @@ time ./$SCRIPT 0 1000000
 
 echo "Job completed successfully!"
 ```
-
-Why use variables?
-- Easier to maintain — you can update one line instead of many
-- Easier to reuse — makes the script portable between projects
-- Easier to read — self-documented workflow steps
 
 ## Loading Modules and Setting Environment
 
@@ -179,8 +183,8 @@ By default, both standard output and standard error are directed to a file named
 To explicitly specify standard output and error files:
 
 ```bash
-#SBATCH --output=logs/demo_%j.out
-#SBATCH --error=logs/demo_%j.err
+#SBATCH --output=logs/slurm_%j.out
+#SBATCH --error=logs/slurm_%j.err
 ```
 
 This approach helps organize job logs by job ID under a designated directory such as `logs/`.
@@ -202,7 +206,7 @@ This writes all standard output from the command to `output.txt`.
 Check job output:
 
 ```bash
-cat logs/demo-<job_id>.out
+cat logs/slurm-<job_id>.out
 ```
 
 > 💡 **TIP:** Use `less` or `tail -f` for large files or to monitor output in real time.

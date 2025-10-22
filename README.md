@@ -21,9 +21,10 @@ Each topic in this tutorial is contained in its own Markdown file for easy navig
 
 | Section | Description |
 | :- | :- |
+| [00-preparation.md](./00-preparation.md) | Logging in via SSH and setting up your working directory |
 | [01-scheduling-jobs.md](./01-scheduling-jobs.md) | Introducing Slurm basics for scheduling interactive and batch jobs |
 | [02-monitoring-resource.md](./02-monitoring-resource.md) | Understanding usage accounting and job monitoring tools |
-| [03-bash-scripts.md](./03-bash-scripts.md) | Writing and using Bash scripts to automate your workflows |
+| [03-bash-scripts.md](./03-bash-scripts.md) | Writing and using Bash scripts to manage your workflows |
 | [04-job-arrays.md](./04-job-arrays.md) | Leveraging job arrays for large-scale or parameter-sweep tasks |
 | [05-task.md](./05-task.md) | Hands-on exercise: submit and monitor your own jobs on Tillicum |
 
@@ -33,7 +34,7 @@ A link to the recording of the October 22, 2025 Tillicum Slurm workshop will be 
 
 ## Feedback
 
-We’d love your feedback to help improve this tutorial and future Tillicum trainings. After completing the tutorial or attending the workshop, please take a moment to fill out our [feedback form]().
+We’d love your feedback to help improve this tutorial and future Tillicum trainings. After completing the tutorial or attending the workshop, please take a moment to fill out our [feedback form](https://forms.office.com/r/df5DkALpZA).
 
 ## Additional Resources
 
