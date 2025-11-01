@@ -30,7 +30,7 @@ Each topic in this tutorial is contained in its own Markdown file for easy navig
 
 ## Introduction Video
 
-A link to the recording of the October 22, 2025 Tillicum Slurm workshop will be added here when available.
+<iframe width="560" height="315" src="https://www.youtube.com/embed/SN8xmxg62t8?si=Pnfx7lcYi2LCQVr9" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## Feedback
 
